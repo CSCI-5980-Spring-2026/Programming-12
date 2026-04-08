@@ -7,6 +7,7 @@
 #include <GopherEngine/Core/Clock.hpp>
 #include <GopherEngine/Core/EventSystem.hpp>
 #include <GopherEngine/Resource/ResourceManager.hpp>
+#include <GopherEngine/Physics/PhysicsWorld.hpp>
 
 #include <memory>
 
@@ -36,6 +37,8 @@ namespace GopherEngine
             // Services
             EventSystem event_system_;
             ResourceManager resource_manager_;
+            PhysicsWorld physics_world_;
+
 
             // Current scene being rendered and updated
             std::shared_ptr<Scene> scene_;

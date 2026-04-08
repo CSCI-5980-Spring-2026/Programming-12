@@ -12,6 +12,7 @@ namespace GopherEngine {
         scene_ = make_shared<Scene>();
         Service<EventSystem>::provide(&event_system_);
         Service<ResourceManager>::provide(&resource_manager_);
+        Service<PhysicsWorld>::provide(&physics_world_);
     }
 
     MainLoop::~MainLoop()
@@ -66,6 +67,9 @@ namespace GopherEngine {
 
             // Recompute scene transforms so physics sees current world matrices.
             scene_->sync_transforms();
+
+            // Run collision detection for the current frame.
+            physics_world_.update();
             
             // Let the application react to the post-physics state of the frame.
             update(delta_time);
