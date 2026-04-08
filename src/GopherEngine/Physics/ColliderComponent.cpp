@@ -29,4 +29,9 @@ namespace GopherEngine
         // Return the cached list of overlapping collider ids from the last physics update.
         return overlapping_colliders_;
     }
+
+    ColliderId ColliderComponent::get_collider_id() const
+    {
+        return collider_id_;
+    }
 }

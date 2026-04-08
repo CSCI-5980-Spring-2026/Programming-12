@@ -146,7 +146,81 @@ namespace GopherEngine
 
     void PhysicsWorld::update()
     {
-        // This function will be responsible for synchronizing engine transforms into Bullet,
-        // running collision detection, and caching the overlap results for later queries this frame.
+        // Start each frame with a fresh list of overlap pairs.
+        collision_pairs_.clear();
+
+        for (auto& [collider_id, entry] : colliders_)
+        {
+            // Clear each collider's cached overlap list before detecting the
+            // current frame's overlaps.
+            if (entry.component_ != nullptr)
+                entry.component_->overlapping_colliders_.clear();
+
+            // Skip incomplete entries rather than crashing; this keeps the
+            // wrapper tolerant of registration teardown edge cases.
+            if (entry.owner_node_ == nullptr || entry.object_ == nullptr)
+                continue;
+
+            // Copy the latest engine world transform into Bullet before running
+            // collision detection.
+            entry.object_->setWorldTransform(to_bullet_transform(entry.owner_node_->world_matrix()));
+        }
+
+        // Ask Bullet to detect all overlaps for the current object transforms.
+        collision_world_->performDiscreteCollisionDetection();
+
+        const int manifold_count = dispatcher_->getNumManifolds();
+
+        for (int manifold_index = 0; manifold_index < manifold_count; ++manifold_index)
+        {
+            // Each manifold represents the contact data Bullet found for one pair.
+            auto* manifold = dispatcher_->getManifoldByIndexInternal(manifold_index);
+            bool overlapping = false;
+
+            for (int contact_index = 0; contact_index < manifold->getNumContacts(); ++contact_index)
+            {
+                // For this teaching pass, a contact with non-positive distance
+                // counts as an overlap.
+                if (manifold->getContactPoint(contact_index).getDistance() <= 0.f)
+                {
+                    overlapping = true;
+                    break;
+                }
+            }
+
+            // Ignore manifolds that do not currently represent an overlap.
+            if (!overlapping)
+                continue;
+
+            // Recover the Bullet objects that participated in this overlap.
+            const auto* object_a = static_cast<const btCollisionObject*>(manifold->getBody0());
+            const auto* object_b = static_cast<const btCollisionObject*>(manifold->getBody1());
+
+            // Each Bullet collision object stores the engine collider id in its
+            // user index, so no separate reverse-lookup table is needed.
+            const int object_a_id = object_a->getUserIndex();
+            const int object_b_id = object_b->getUserIndex();
+
+            if (object_a_id <= 0 || object_b_id <= 0)
+                continue;
+
+            const ColliderId collider_a = static_cast<ColliderId>(object_a_id);
+            const ColliderId collider_b = static_cast<ColliderId>(object_b_id);
+
+            // Store the pair in a consistent sorted order to simplify later queries.
+            collision_pairs_.push_back({
+                std::min(collider_a, collider_b),
+                std::max(collider_a, collider_b)
+            });
+
+            // Mark both colliders as colliding so component-side queries stay simple.
+            if (auto collider_it = colliders_.find(collider_a); collider_it != colliders_.end() &&
+                collider_it->second.component_ != nullptr)
+                collider_it->second.component_->overlapping_colliders_.push_back(collider_b);
+
+            if (auto collider_it = colliders_.find(collider_b); collider_it != colliders_.end() &&
+                collider_it->second.component_ != nullptr)
+                collider_it->second.component_->overlapping_colliders_.push_back(collider_a);
+        }
     }
 }

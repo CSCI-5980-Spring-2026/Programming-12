@@ -13,6 +13,8 @@
 #include <GopherEngine/Renderer/BlinnPhongMaterial.hpp>
 #include <GopherEngine/Resource/MeshFactory.hpp>
 #include <GopherEngine/Core/FileLoader.hpp>
+#include <GopherEngine/Physics/BoxColliderComponent.hpp>
+#include <GopherEngine/Physics/SphereColliderComponent.hpp>
 
 #include <glm/gtc/quaternion.hpp>
 using namespace GopherEngine;
@@ -38,6 +40,7 @@ class MainLoopTest: public MainLoop, public EventHandler
 		// Override the pure virtual functions from MainLoop
 		void configure() override;
 		void initialize() override;
+		void physics_update(float delta_time) override;
 		void update(float delta_time) override;
 		void on_key_down(const KeyEvent& event) override;
 		void on_key_up(const KeyEvent& event) override;
@@ -82,6 +85,9 @@ std::shared_ptr<Node> MainLoopTest::create_sphere_node(float radius) {
 	mesh_component->set_mesh(MeshFactory::create_sphere(radius));
 	node->add_component(mesh_component);
 
+	auto collider = make_shared<SphereColliderComponent>(radius);
+	node->add_component(collider);
+
 	const glm::vec3 diffuse_color(Random::value(), Random::value(), Random::value());
 	auto material = make_shared<BlinnPhongMaterial>();
 	material->set_ambient_color(diffuse_color * 0.3f);
@@ -101,6 +107,9 @@ std::shared_ptr<Node> MainLoopTest::create_cube_node(glm::vec3 dimensions) {
 	auto mesh_component = make_shared<MeshComponent>();
 	mesh_component->set_mesh(MeshFactory::create_cube(dimensions.x, dimensions.y, dimensions.z));
 	node->add_component(mesh_component);
+
+	auto collider = make_shared<BoxColliderComponent>(dimensions);
+	node->add_component(collider);
 	
 	const glm::vec3 diffuse_color(Random::value(), Random::value(), Random::value());
 	auto material = make_shared<BlinnPhongMaterial>();
@@ -173,8 +182,10 @@ void MainLoopTest::initialize() {
 
 }
 
-
-void MainLoopTest::update(float delta_time) {
+// This function is called once per frame, before the physics system is updated.
+// It should be used for updating the movement of objects that need to be processed
+// for collision detection in the physics update, such as moving platforms or player characters.
+void MainLoopTest::physics_update(float delta_time) {
 
 	// Move the movable node based on the current move direction and delta time
 	if (glm::length(move_direction_) > 0.f) {
@@ -196,6 +207,30 @@ void MainLoopTest::update(float delta_time) {
 		const glm::quat delta_rotation = glm::angleAxis(delta_time * glm::radians(25.f) * direction, glm::vec3(0.f, 1.f, 0.f));
 		planet_nodes_[i]->transform().rotation_ = glm::normalize(delta_rotation * planet_nodes_[i]->transform().rotation_);
 	}
+}
+
+// This function is called once per frame, after the physics update and before rendering.
+// Here, we can read the collision state that has been updated based on the movement in physics_update.
+void MainLoopTest::update(float delta_time) {
+
+	if (!movable_node_) return;
+
+	// Check if the movable node is colliding with anything and print the IDs of any colliders it is overlapping with
+	const auto colliders = movable_node_->get_components<ColliderComponent>();
+	if (!colliders.empty() && colliders.front()->is_colliding()) {
+
+		cout << clock_.get_elapsed_time() <<
+			"sec: collider " <<
+			colliders.front()->get_collider_id() << 
+			" collision detected with ";
+
+		for (const auto collider_id : colliders.front()->get_overlapping_colliders()) {
+			cout << collider_id << " ";
+		}
+
+		cout << endl;
+	}
+
 }
 
 void MainLoopTest::on_key_down(const KeyEvent& event) {

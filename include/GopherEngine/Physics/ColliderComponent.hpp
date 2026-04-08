@@ -22,6 +22,9 @@ namespace GopherEngine
             // Returns whether this collider overlapped anything during the last physics update.
             bool is_colliding() const;
 
+            // Returns the engine-side id assigned by PhysicsWorld.
+            ColliderId get_collider_id() const;
+
             // Returns the cached list of overlapping collider ids from the last physics update.
             const std::vector<ColliderId>& get_overlapping_colliders() const;
 
