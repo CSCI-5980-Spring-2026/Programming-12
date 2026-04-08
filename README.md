@@ -2,6 +2,8 @@
 
 In this live programming class, we will implement and debug a collision system using the [Bullet Physics SDK](https://github.com/bulletphysics/bullet3).
 
+In the demo scene, you can control one of the boxes with the WASD keys. Rotation of the "solar system" can be paused and resumed by pressing the space bar. Once the collision system is fully implemented, timestamped collisions between the movable box and other elements of the scene will be printed to the console.
+
 ## Prerequisites
 
 To work with this code, you will first need to install the following software (same or newer versions):
