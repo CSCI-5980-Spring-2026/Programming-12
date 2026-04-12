@@ -52,6 +52,12 @@ namespace GopherEngine
             // and caches the overlap results for later queries this frame.
             void update();
 
+            // Returns the owning node for a collider id, or nullptr if the id is unknown.
+            Node* get_node_for_collider(ColliderId collider_id) const;
+
+            // Returns the collider component for a collider id, or nullptr if the id is unknown.
+            ColliderComponent* get_component_for_collider(ColliderId collider_id) const;
+
             // Creates and registers a Bullet sphere shape for a collider component.
             ColliderId register_sphere_collider(SphereColliderComponent* component, Node& node);
 

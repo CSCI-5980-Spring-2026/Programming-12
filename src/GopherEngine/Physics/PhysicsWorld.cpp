@@ -74,6 +74,24 @@ namespace GopherEngine
 
     PhysicsWorld::~PhysicsWorld() = default;
 
+    Node* PhysicsWorld::get_node_for_collider(ColliderId collider_id) const
+    {
+        const auto collider_it = colliders_.find(collider_id);
+        if (collider_it == colliders_.end())
+            return nullptr;
+
+        return collider_it->second.owner_node_;
+    }
+
+    ColliderComponent* PhysicsWorld::get_component_for_collider(ColliderId collider_id) const
+    {
+        const auto collider_it = colliders_.find(collider_id);
+        if (collider_it == colliders_.end())
+            return nullptr;
+
+        return collider_it->second.component_;
+    }
+
     ColliderId PhysicsWorld::register_sphere_collider(SphereColliderComponent* component, Node& node)
     {
         const float clamped_radius = std::max(component->get_radius(), 0.001f);

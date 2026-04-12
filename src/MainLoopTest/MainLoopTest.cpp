@@ -224,11 +224,37 @@ void MainLoopTest::update(float delta_time) {
 			colliders.front()->get_collider_id() << 
 			" collision detected with ";
 
-		for (const auto collider_id : colliders.front()->get_overlapping_colliders()) {
+		auto collider = colliders.front();
+
+		// Loop through the overlapping colliders and print their IDs. 
+		for (const auto collider_id : collider->get_overlapping_colliders()) {
 			cout << collider_id << " ";
 		}
-
 		cout << endl;
+
+		// Loop through the overlapping colliders again to demonstrate that we can query
+		// the physics world for information about them and react to it in the update phase.
+		for (const auto collider_id : collider->get_overlapping_colliders()) {
+
+			// Query the physics world for the node associated with the overlapping collider ID
+			Node *other_node = physics_world_.get_node_for_collider(collider_id);
+
+			// If the other node is valid and is not the sun, remove it from the scene.
+			if(other_node && other_node->id() != sun_node_->id()) {	
+
+				// Move collided node to the end of the vector
+				auto new_end = std::remove_if(planet_nodes_.begin(), planet_nodes_.end(),
+					[other_node](const std::shared_ptr<Node>& node) {
+						return node->id() == other_node->id();
+					});
+
+				// Erase the collide nodes from the vector
+				planet_nodes_.erase(new_end, planet_nodes_.end());
+
+				// Remove the collided node from the scene
+				scene_->get_root()->remove_child_by_id(other_node->id());
+			}
+		}
 	}
 
 }
