@@ -20,36 +20,6 @@ namespace GopherEngine
     {
         public:
 
-            void load_texture(
-                std::filesystem::path path,
-                std::function<void(std::shared_ptr<Texture>)> on_success = nullptr,
-                std::function<void(const std::string&)> on_error = nullptr);
-
-            void load_texture(
-                const Guid& guid,
-                std::function<void(std::shared_ptr<Texture>)> on_success = nullptr,
-                std::function<void(const std::string&)> on_error = nullptr);
-
-            void load_mesh(
-                std::filesystem::path path,
-                std::function<void(std::shared_ptr<Mesh>)> on_success = nullptr,
-                std::function<void(const std::string&)> on_error = nullptr);
-
-            void load_mesh(
-                const Guid& guid,
-                std::function<void(std::shared_ptr<Mesh>)> on_success = nullptr,
-                std::function<void(const std::string&)> on_error = nullptr);
-
-            void load_material(
-                std::filesystem::path path,
-                std::function<void(std::shared_ptr<Material>)> on_success = nullptr,
-                std::function<void(const std::string&)> on_error = nullptr);
-
-            void load_material(
-                const Guid& guid,
-                std::function<void(std::shared_ptr<Material>)> on_success = nullptr,
-                std::function<void(const std::string&)> on_error = nullptr);
-
             // Registers a one-shot callback to run on the main thread after all
             // currently pending resource loads have finished.
             void on_load_complete(std::function<void()> callback);
